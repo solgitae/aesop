@@ -1,9 +1,8 @@
 use std::path::PathBuf;
 
-use anyhow::Result;
 use serde::Deserialize;
 
-use crate::error::AesopError;
+use crate::error::{AesopError, Result};
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Config {
@@ -103,5 +102,73 @@ impl UiConfig {
 
     pub fn batch_ms(&self) -> u64 {
         self.batch_ms.unwrap_or(16)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+    use std::io::Write;
+    use tempfile::NamedTempFile; // 명시적으로 추가
+
+    fn write_config(content: &str) -> NamedTempFile {
+        let mut file = NamedTempFile::new().unwrap();
+        write!(file, "{}", content).unwrap();
+        file
+    }
+
+    #[test]
+    fn test_load_valid_config() {
+        let file = write_config(Config::default_content());
+        let config = Config::load(&file.path().to_path_buf()).unwrap();
+
+        assert_eq!(config.sources.len(), 1);
+        assert_eq!(config.sources[0].path, "./logs/**/*.log");
+        assert_eq!(config.index.max_days(), 3);
+        assert_eq!(config.index.max_size_bytes(), 512 * 1024 * 1024);
+        assert_eq!(config.index.max_memory_lines(), 100_000);
+        assert_eq!(config.ui.theme(), "dark");
+    }
+
+    #[test]
+    fn test_source_enabled_default() {
+        let file = write_config(Config::default_content());
+
+        let config = Config::load(&file.path().to_path_buf()).unwrap();
+        assert!(config.sources[0].is_enabled());
+    }
+
+    #[test]
+    fn test_load_missing_file() {
+        let result = Config::load(&PathBuf::from("nonexistent.toml"));
+        assert!(matches!(result, Err(AesopError::ConfigNotFound { .. })));
+    }
+
+    #[test]
+    fn test_invalid_toml() {
+        let file = write_config("this is not invalid toml");
+        let result = Config::load(&file.path().to_path_buf());
+
+        assert!(matches!(result, Err(AesopError::ConfigParse(_))))
+    }
+
+    #[test]
+    fn test_optional_fields_default() {
+        let file = write_config(
+            r#"
+                [[sources]]
+                path = "./logs/*.log"
+
+                [index]
+
+                [ui]
+            "#,
+        );
+
+        let config = Config::load(&file.path().to_path_buf()).unwrap();
+        assert_eq!(config.index.max_days(), 3);
+        assert_eq!(config.ui.theme(), "dark");
+        assert!(config.ui.nerd_fonts());
     }
 }
