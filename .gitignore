@@ -1,0 +1,6 @@
+*.md
+!README.md
+.env*
+
+/target
+.DS_Store
