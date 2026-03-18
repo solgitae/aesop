@@ -3,8 +3,6 @@ name = "aesop"
 version = "0.1.0"
 edition = "2024"
 
-[dependencies]
-
 [[bin]]
 name = "aesop"
 path = "src/main.rs"
@@ -25,6 +23,9 @@ crossbeam-channel = "0.5"
 anyhow = "1"
 chrono = { version = "0.4", features = ["serde"] }
 dirs = "5"
+thiserror = "1"
+regex = "1"
+
 
 [dev-dependencies]
 tempfile = "3"
