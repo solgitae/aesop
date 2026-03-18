@@ -4,3 +4,27 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+
+[[bin]]
+name = "aesop"
+path = "src/main.rs"
+
+[lib]
+name = "aesop"
+path = "src/lib.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+toml = "0.8"
+serde_json = "1"
+globset = "0.4"
+walkdir = "2"
+notify = "6"
+crossbeam-channel = "0.5"
+anyhow = "1"
+chrono = { version = "0.4", features = ["serde"] }
+dirs = "5"
+
+[dev-dependencies]
+tempfile = "3"
